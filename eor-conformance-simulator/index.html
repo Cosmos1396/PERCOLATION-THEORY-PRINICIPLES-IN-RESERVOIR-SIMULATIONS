@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EOR Conformance Control Simulator</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Percolation theory + cellular automata</p>
+      <h1>EOR Conformance Control Simulator</h1>
+      <p class="subtitle">Explore how heterogeneity, connectivity, mobility control and selective treatments alter sweep and production response.</p>
+    </div>
+    <button id="runBtn" class="primary">Run simulation</button>
+  </header>
+
+  <main class="layout">
+    <aside class="panel controls">
+      <h2>Model controls</h2>
+
+      <label>EOR process
+        <select id="eorType">
+          <option value="water">Waterflood</option>
+          <option value="polymer" selected>Polymer flood</option>
+          <option value="co2">CO₂ flood</option>
+          <option value="foam">Foam-assisted gas flood</option>
+        </select>
+      </label>
+
+      <label>Conformance treatment
+        <select id="treatmentType">
+          <option value="none">None</option>
+          <option value="gel" selected>Gel treatment</option>
+          <option value="foam">Foam treatment</option>
+        </select>
+      </label>
+
+      <div class="grid2">
+        <label>Nx <input id="nx" type="number" min="10" max="30" value="20" /></label>
+        <label>Ny <input id="ny" type="number" min="10" max="30" value="20" /></label>
+        <label>Nz <input id="nz" type="number" min="4" max="14" value="8" /></label>
+        <label>Steps <input id="steps" type="number" min="20" max="160" value="90" /></label>
+      </div>
+
+      <label>High-permeability fraction <span id="hpv">0.38</span>
+        <input id="highPermFraction" type="range" min="0.10" max="0.75" step="0.01" value="0.38" />
+      </label>
+
+      <label>Permeability contrast <span id="pcv">12×</span>
+        <input id="permContrast" type="range" min="2" max="40" step="1" value="12" />
+      </label>
+
+      <label>Spatial correlation <span id="scv">0.62</span>
+        <input id="correlation" type="range" min="0" max="0.95" step="0.01" value="0.62" />
+      </label>
+
+      <label>Mobility ratio <span id="mrv">2.0</span>
+        <input id="mobilityRatio" type="range" min="0.25" max="6" step="0.05" value="2" />
+      </label>
+
+      <label>CA propagation probability <span id="ppv">0.64</span>
+        <input id="propagation" type="range" min="0.1" max="0.95" step="0.01" value="0.64" />
+      </label>
+
+      <label>Treatment strength <span id="tsv">65%</span>
+        <input id="treatmentStrength" type="range" min="0" max="0.95" step="0.01" value="0.65" />
+      </label>
+
+      <label>Treatment start step <span id="tssv">28</span>
+        <input id="treatmentStep" type="range" min="1" max="120" step="1" value="28" />
+      </label>
+
+      <label>Channel targeting percentile <span id="ctv">82%</span>
+        <input id="targetPercentile" type="range" min="50" max="98" step="1" value="82" />
+      </label>
+
+      <div class="actions">
+        <button id="newGeoBtn">New geology</button>
+        <button id="resetBtn">Reset defaults</button>
+      </div>
+      <p class="note">Educational reduced-order model. Use trends and causal relationships—not absolute field predictions—for interpretation.</p>
+    </aside>
+
+    <section class="content">
+      <div class="kpis" id="kpis">
+        <article><span>Recovery factor</span><strong id="rfKpi">—</strong></article>
+        <article><span>Final water cut</span><strong id="wcKpi">—</strong></article>
+        <article><span>Breakthrough</span><strong id="btKpi">—</strong></article>
+        <article><span>Spanning cluster</span><strong id="spanKpi">—</strong></article>
+      </div>
+
+      <section class="panel visual-card">
+        <div class="section-head">
+          <div><h2>3D reservoir state</h2><p>Rotate, zoom and inspect the current final-time saturation/connectivity state.</p></div>
+          <select id="viewMode">
+            <option value="saturation">Injected-phase saturation</option>
+            <option value="permeability">Permeability</option>
+            <option value="cluster">Percolating cluster</option>
+            <option value="treatment">Treatment placement</option>
+          </select>
+        </div>
+        <div id="reservoir3d" class="plot tall"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head"><div><h2>Production response</h2><p>Oil rate, water cut and recovery respond to the same state changes shown in 3D.</p></div></div>
+        <div id="productionPlot" class="plot"></div>
+      </section>
+
+      <section class="panel insights">
+        <h2>Cause-and-effect diagnostics</h2>
+        <div id="diagnostics"></div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
