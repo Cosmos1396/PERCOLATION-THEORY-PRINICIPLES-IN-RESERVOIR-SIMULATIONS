@@ -1,17 +1,23 @@
 # EOR Conformance Control Simulator
 
-Interactive 3D reduced-order reservoir simulator that combines **percolation theory** and **cellular automata (CA)** to study conformance-control concepts for EOR.
+Interactive 3D reduced-order reservoir simulator that combines **percolation theory**, **cellular automata (CA)** and a **pressure-driven transmissibility model** to study EOR conformance-control concepts.
 
-## What it does
+## Current physics
 
-- Builds a correlated 3D heterogeneous permeability field.
-- Defines high-permeability cells from a user-controlled fraction.
-- Uses 6-neighbour connectivity to identify injector-to-producer spanning clusters.
-- Propagates an injected phase with a stochastic CA transition rule that responds to local transmissibility, direction, mobility ratio and EOR process.
-- Applies selective gel/foam conformance treatment to high-permeability cells in the active spanning cluster.
-- Reduces treated-cell effective permeability, which changes later CA propagation.
-- Correlates the evolving reservoir state with oil rate, water cut, recovery factor and breakthrough.
-- Provides switchable 3D views for injected-phase saturation, permeability, percolating cluster and treatment placement.
+- Generates a correlated 3D heterogeneous permeability field.
+- Uses 6-neighbour connectivity to identify injector-to-producer high-permeability spanning clusters.
+- Solves a dimensionless steady pressure field between injector and producer faces with iterative transmissibility weighting.
+- Uses harmonic permeability and phase mobility to calculate Darcy-like positive cell-to-cell flux weights.
+- Advances water saturation stochastically with a CA rule weighted by local pressure drop and transmissibility.
+- Enforces irreducible water saturation `Swi` and residual oil saturation `Sor`.
+- Uses Corey relative-permeability curves:
+  - `krw = Se^nw`
+  - `kro = (1-Se)^no`
+  - `Se = (Sw-Swi)/(1-Swi-Sor)`
+- Calculates producer water cut from phase fractional flow rather than directly from saturation.
+- Applies selective gel/foam treatment to swept, connected high-permeability cells.
+- Re-solves pressure after treatment so permeability reduction can redistribute subsequent flow.
+- Reports relative oil-rate index, water cut, recovery factor, sweep and breakthrough.
 
 ## EOR modes
 
@@ -20,38 +26,36 @@ Interactive 3D reduced-order reservoir simulator that combines **percolation the
 - CO2 flood
 - Foam-assisted gas flood
 
-The modes are represented through reduced-order mobility/spread/oil-response factors. They are intended for causal exploration, not calibrated field prediction.
+The EOR selections currently modify reduced-order mobility/spread factors. They are not yet mechanistic polymer, foam or compositional modules.
 
-## Main hyperparameters
+## Main controls
 
 | Control | Physical interpretation |
 |---|---|
-| High-permeability fraction | Occupancy probability / amount of conductive rock |
+| High-permeability fraction | Amount of conductive rock / percolation occupancy |
 | Permeability contrast | Severity of preferential flow paths |
-| Spatial correlation | Continuity of high-permeability cells |
-| Mobility ratio | Viscous displacement stability |
-| CA propagation probability | Base probability of front advance |
-| Treatment strength | Reduction of effective permeability in targeted cells |
+| Spatial correlation | Continuity of connected high-permeability regions |
+| Mobility ratio | Relative displacement stability |
+| CA propagation probability | Stochastic transport scaling |
+| Swi | Irreducible water saturation |
+| Sor | Residual oil saturation |
+| Corey `nw` | Water relative-permeability curvature |
+| Corey `no` | Oil relative-permeability curvature |
+| Treatment strength | Permeability reduction in targeted cells |
 | Treatment start step | Timing of conformance intervention |
 | Channel targeting percentile | Selectivity of treatment placement |
 
-## Model concept
+## Pressure / transport concept
 
-For adjacent cells `i` and `j`, a harmonic-mean-like local transmissibility is calculated from effective permeability. The stochastic transition probability is then modified by:
+For each connection, phase mobility is calculated from the current saturation and Corey curves. Effective total mobility is combined with permeability, and a harmonic connection transmissibility is formed. The pressure field is solved iteratively with fixed dimensionless pressure at the injector and producer faces and no-flow behavior on the remaining outer boundaries.
 
-- local transmissibility,
-- forward/backward direction bias,
-- effective mobility ratio,
-- EOR-process factor,
-- current injected-phase saturation.
+The CA transition probability is then weighted by positive local pressure-driven flux. This makes conformance treatment more physically meaningful than simply changing a CA probability: reducing permeability in a treated high-flow path changes the pressure solution and therefore the relative attractiveness of alternative pathways.
 
-A random draw determines whether the CA front advances. The conformance treatment changes `k_eff` in selected connected high-flow cells, so subsequent propagation and production response change dynamically.
+## Reproducibility
 
-The percolation test starts from the injector face and performs a breadth-first search through high-permeability cells. A spanning cluster exists when that connected component reaches the producer face.
+The default realization uses a deterministic seeded pseudo-random generator. `Reset defaults` restores that seed. `New geology` intentionally changes the seed to generate a different realization.
 
 ## Run locally
-
-Because the app uses ES modules, serve the directory rather than double-clicking the HTML file:
 
 ```bash
 cd eor-conformance-simulator
@@ -62,20 +66,16 @@ Then open `http://localhost:8000`.
 
 No build step is required. Plotly is loaded from a CDN.
 
-## GitHub Pages
+## Interpretation boundary
 
-The folder is a static web app and can be published with GitHub Pages (or copied to a standalone repository and deployed directly).
+This remains a **reduced-order research simulator**. Pressure and fractional-flow physics improve causal behavior, but it is not a replacement for a fully implicit finite-volume black-oil/compositional/thermal simulator. The current rate axis is a **relative rate index**, not STB/day. Results should not be presented as field forecasts unless calibrated to reservoir geometry, porosity, absolute permeability, PVT/SCAL, well controls and production history.
 
-## Important limitation
+## Development priorities
 
-This is an **educational/research reduced-order simulator**. It is not a replacement for a finite-volume compositional/thermal reservoir simulator. Absolute rates and recovery values are illustrative unless the model is calibrated against a specific reservoir, PVT/SCAL data, well controls and historical production.
-
-## Suggested next developments
-
-1. Replace heuristic production mapping with a finite-volume pressure/transport solve.
-2. Import real permeability/porosity grids (CSV/GRDECL).
-3. Add relative permeability and capillary-pressure curves.
-4. Add well controls and multiple injector/producer patterns.
-5. Add polymer adsorption/rheology, foam texture, or CO2 miscibility modules.
-6. Add ensemble runs and uncertainty distributions.
-7. Add history matching / optimization of treatment placement.
+1. Add deterministic numerical regression tests and conservation diagnostics.
+2. Add side-by-side baseline vs treatment scenarios on the same geology.
+3. Add cell pore volume/porosity and explicit material-balance reporting.
+4. Import permeability/porosity grids (CSV/GRDECL-style workflow).
+5. Add multiple injector/producer patterns and well controls.
+6. Implement mechanistic polymer rheology/adsorption and foam mobility reduction.
+7. Add ensembles, uncertainty distributions and treatment optimization.
