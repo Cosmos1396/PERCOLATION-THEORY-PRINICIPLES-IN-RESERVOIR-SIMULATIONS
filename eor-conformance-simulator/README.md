@@ -2,6 +2,35 @@
 
 Interactive 3D reduced-order reservoir simulator that combines **percolation theory**, **cellular automata (CA)** and a **pressure-driven transmissibility model** to study EOR conformance-control concepts.
 
+## Current-build results
+
+The figures below are generated from the current simulator physics using the deterministic default realization (`seed = 137`). The untreated and gel-treatment cases use the **same geology** so that the comparison isolates treatment response rather than geology randomness.
+
+### 3D permeability / connectivity
+
+![3D permeability architecture and connectivity](media/current-build/permeability_connectivity_3d.svg)
+
+### 3D saturation / treatment placement
+
+![3D saturation front and treatment targets](media/current-build/saturation_treatment_3d.svg)
+
+### Production-response comparison
+
+![Current-build performance comparison](media/current-build/performance_comparison.svg)
+
+| Metric | Polymer - untreated | Polymer + gel |
+|---|---:|---:|
+| Breakthrough step | 74 | 78 |
+| Final water cut | 40.73% | 31.56% |
+| Recovery factor | 44.76% | 44.49% |
+| Swept fraction | 88.91% | 89.41% |
+| Gel-treated cells | 0 | 347 |
+| Connected high-k fraction | 37.88% | 37.88% |
+
+The present result suggests that pressure redistribution after selective permeability reduction can delay breakthrough and lower water cut in this realization, but it does **not** yet demonstrate incremental recovery. That distinction is important: this is a reduced-order research result, not a field forecast.
+
+Raw summary values are available in [`media/current-build/case_metrics.csv`](media/current-build/case_metrics.csv).
+
 ## Current physics
 
 - Generates a correlated 3D heterogeneous permeability field.
