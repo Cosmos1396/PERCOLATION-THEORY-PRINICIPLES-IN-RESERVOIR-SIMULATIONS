@@ -10,7 +10,7 @@
 <body>
   <header class="topbar">
     <div>
-      <p class="eyebrow">Percolation theory + cellular automata + pressure-driven flow</p>
+      <p class="eyebrow">Percolation connectivity + pressure-driven finite-volume transport</p>
       <h1>EOR Conformance Control Simulator</h1>
       <p class="subtitle">Explore how heterogeneity, connectivity, mobility control and selective treatments alter sweep and production response.</p>
     </div>
@@ -46,7 +46,7 @@
       <label>Spatial correlation <span id="scv">0.62</span><input id="correlation" type="range" min="0" max="0.95" step="0.01" value="0.62" /></label>
       <label>Porosity, φ <span id="phiv">0.22</span><input id="porosity" type="range" min="0.05" max="0.40" step="0.01" value="0.22" /></label>
       <label>Mobility ratio <span id="mrv">2.0</span><input id="mobilityRatio" type="range" min="0.25" max="6" step="0.05" value="2" /></label>
-      <label>CA propagation probability <span id="ppv">0.64</span><input id="propagation" type="range" min="0.1" max="0.95" step="0.01" value="0.64" /></label>
+      <label>Transport Courant target <span id="ppv">0.35</span><input id="propagation" type="range" min="0.05" max="0.80" step="0.01" value="0.35" /></label>
       <h3>SCAL / displacement</h3>
       <label>Irreducible water saturation, Swi <span id="swiv">0.20</span><input id="swi" type="range" min="0.05" max="0.40" step="0.01" value="0.20" /></label>
       <label>Residual oil saturation, Sor <span id="sorv">0.22</span><input id="sor" type="range" min="0.05" max="0.40" step="0.01" value="0.22" /></label>
@@ -57,7 +57,7 @@
       <label>Treatment start step <span id="tssv">28</span><input id="treatmentStep" type="range" min="1" max="120" step="1" value="28" /></label>
       <label>Channel targeting percentile <span id="ctv">82%</span><input id="targetPercentile" type="range" min="50" max="98" step="1" value="82" /></label>
       <div class="actions"><button id="newGeoBtn">New geology</button><button id="resetBtn">Reset defaults</button></div>
-      <p class="note">Reduced-order research model. Pressure, transmissibility and Corey fractional-flow logic improve physical causality, but absolute rate predictions are not field-calibrated.</p>
+      <p class="note">Reduced-order research model. Saturation transport is now finite-volume and water-conservative, but absolute rates and EOR chemistry remain uncalibrated and should not be treated as field forecasts.</p>
     </aside>
 
     <section class="content">
@@ -66,7 +66,7 @@
         <article><span>Final water cut</span><strong id="wcKpi">—</strong></article>
         <article><span>Breakthrough</span><strong id="btKpi">—</strong></article>
         <article><span>Spanning cluster</span><strong id="spanKpi">—</strong></article>
-        <article><span>CA source defect</span><strong id="mbKpi">—</strong><small>% total PV</small></article>
+        <article><span>FV water-balance residual</span><strong id="mbKpi">—</strong><small>% total PV</small></article>
       </div>
       <section class="panel visual-card">
         <div class="section-head"><div><h2>3D reservoir state</h2><p>Rotate, zoom and inspect the current final-time saturation/connectivity state.</p></div>
@@ -77,6 +77,6 @@
       <section class="panel insights"><h2>Cause-and-effect diagnostics</h2><div id="diagnostics"></div></section>
     </section>
   </main>
-  <script type="module" src="./src/app.js"></script>
+  <script type="module" src="./src/app-fv.js"></script>
 </body>
 </html>
