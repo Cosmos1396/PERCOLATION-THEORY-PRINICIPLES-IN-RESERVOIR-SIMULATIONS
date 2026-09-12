@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EOR Conformance Control Simulator</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Percolation connectivity + pressure-driven finite-volume transport</p>
+      <h1>EOR Conformance Control Simulator</h1>
+      <p class="subtitle">Explore how heterogeneity, connectivity, mobility control and selective treatments alter sweep and production response.</p>
+    </div>
+    <button id="runBtn" class="primary">Run simulation</button>
+  </header>
+
+  <main class="layout">
+    <aside class="panel controls">
+      <h2>Model controls</h2>
+      <label>EOR process
+        <select id="eorType">
+          <option value="water">Waterflood</option>
+          <option value="polymer" selected>Polymer flood</option>
+          <option value="co2">CO₂ flood</option>
+          <option value="foam">Foam-assisted gas flood</option>
+        </select>
+      </label>
+      <label>Conformance treatment
+        <select id="treatmentType">
+          <option value="none">None</option>
+          <option value="gel" selected>Gel treatment</option>
+          <option value="foam">Foam treatment</option>
+        </select>
+      </label>
+      <div class="grid2">
+        <label>Nx <input id="nx" type="number" min="10" max="30" value="20" /></label>
+        <label>Ny <input id="ny" type="number" min="10" max="30" value="20" /></label>
+        <label>Nz <input id="nz" type="number" min="4" max="14" value="8" /></label>
+        <label>Steps <input id="steps" type="number" min="20" max="160" value="90" /></label>
+      </div>
+      <label>High-permeability fraction <span id="hpv">0.38</span><input id="highPermFraction" type="range" min="0.10" max="0.75" step="0.01" value="0.38" /></label>
+      <label>Permeability contrast <span id="pcv">12×</span><input id="permContrast" type="range" min="2" max="40" step="1" value="12" /></label>
+      <label>Spatial correlation <span id="scv">0.62</span><input id="correlation" type="range" min="0" max="0.95" step="0.01" value="0.62" /></label>
+      <label>Porosity, φ <span id="phiv">0.22</span><input id="porosity" type="range" min="0.05" max="0.40" step="0.01" value="0.22" /></label>
+      <label>Mobility ratio <span id="mrv">2.0</span><input id="mobilityRatio" type="range" min="0.25" max="6" step="0.05" value="2" /></label>
+      <label>Transport Courant target <span id="ppv">0.35</span><input id="propagation" type="range" min="0.05" max="0.80" step="0.01" value="0.35" /></label>
+      <h3>SCAL / displacement</h3>
+      <label>Irreducible water saturation, Swi <span id="swiv">0.20</span><input id="swi" type="range" min="0.05" max="0.40" step="0.01" value="0.20" /></label>
+      <label>Residual oil saturation, Sor <span id="sorv">0.22</span><input id="sor" type="range" min="0.05" max="0.40" step="0.01" value="0.22" /></label>
+      <label>Corey water exponent, nw <span id="nwv">2</span><input id="nw" type="range" min="1" max="5" step="0.1" value="2" /></label>
+      <label>Corey oil exponent, no <span id="nov">2</span><input id="no" type="range" min="1" max="5" step="0.1" value="2" /></label>
+      <h3>Conformance</h3>
+      <label>Treatment strength <span id="tsv">65%</span><input id="treatmentStrength" type="range" min="0" max="0.95" step="0.01" value="0.65" /></label>
+      <label>Treatment start step <span id="tssv">28</span><input id="treatmentStep" type="range" min="1" max="120" step="1" value="28" /></label>
+      <label>Channel targeting percentile <span id="ctv">82%</span><input id="targetPercentile" type="range" min="50" max="98" step="1" value="82" /></label>
+      <div class="actions"><button id="newGeoBtn">New geology</button><button id="resetBtn">Reset defaults</button></div>
+      <p class="note">Reduced-order research model. Saturation transport is finite-volume and water-conservative, but absolute rates and EOR chemistry remain uncalibrated and should not be treated as field forecasts.</p>
+    </aside>
+
+    <section class="content">
+      <div class="kpis" id="kpis">
+        <article><span>Recovery factor</span><strong id="rfKpi">—</strong></article>
+        <article><span>Final water cut</span><strong id="wcKpi">—</strong></article>
+        <article><span>Breakthrough</span><strong id="btKpi">—</strong></article>
+        <article><span>Spanning cluster</span><strong id="spanKpi">—</strong></article>
+        <article><span>FV water-balance residual</span><strong id="mbKpi">—</strong><small>% total PV</small></article>
+      </div>
+      <section class="panel visual-card">
+        <div class="section-head"><div><h2>3D simulation results workspace</h2><p>Inspect calculated reservoir properties and well trajectories from the current numerical state.</p></div>
+          <select id="viewMode"><option value="saturation">Water saturation, Sw</option><option value="pressure">Dimensionless pressure, P*</option><option value="permeability">Permeability, log k</option><option value="cluster">Percolating cluster</option><option value="treatment">Treatment placement</option></select>
+        </div><div id="reservoir3d" class="plot tall"></div>
+      </section>
+      <section class="panel"><div class="section-head"><div><h2>Production response</h2><p>Relative rate, fractional-flow water cut, recovery and injected pore volume from the same FV simulation.</p></div></div><div id="productionPlot" class="plot"></div></section>
+      <section class="panel insights"><h2>Cause-and-effect diagnostics</h2><div id="diagnostics"></div></section>
+    </section>
+  </main>
+  <script type="module" src="./src/app-fv.js"></script>
+</body>
+</html>

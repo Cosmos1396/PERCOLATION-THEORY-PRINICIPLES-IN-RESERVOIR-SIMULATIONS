@@ -1,0 +1,31 @@
+name: EOR simulator validation
+
+on:
+  push:
+    paths:
+      - 'eor-conformance-simulator/**'
+      - '.github/workflows/eor-simulator-validation.yml'
+  pull_request:
+    paths:
+      - 'eor-conformance-simulator/**'
+      - '.github/workflows/eor-simulator-validation.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: eor-conformance-simulator
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate published benchmark
+        run: node validation/validate-benchmark.mjs
+      - name: Validate finite-volume transport conservation
+        run: node validation/validate-transport.mjs
+      - name: Validate application source and conservation diagnostics
+        run: node validation/validate-app-source.mjs
