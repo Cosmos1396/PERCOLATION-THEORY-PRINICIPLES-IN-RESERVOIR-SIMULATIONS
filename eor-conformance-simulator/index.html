@@ -57,7 +57,7 @@
       <label>Treatment start step <span id="tssv">28</span><input id="treatmentStep" type="range" min="1" max="120" step="1" value="28" /></label>
       <label>Channel targeting percentile <span id="ctv">82%</span><input id="targetPercentile" type="range" min="50" max="98" step="1" value="82" /></label>
       <div class="actions"><button id="newGeoBtn">New geology</button><button id="resetBtn">Reset defaults</button></div>
-      <p class="note">Reduced-order research model. Saturation transport is now finite-volume and water-conservative, but absolute rates and EOR chemistry remain uncalibrated and should not be treated as field forecasts.</p>
+      <p class="note">Reduced-order research model. Saturation transport is finite-volume and water-conservative, but absolute rates and EOR chemistry remain uncalibrated and should not be treated as field forecasts.</p>
     </aside>
 
     <section class="content">
@@ -69,11 +69,11 @@
         <article><span>FV water-balance residual</span><strong id="mbKpi">—</strong><small>% total PV</small></article>
       </div>
       <section class="panel visual-card">
-        <div class="section-head"><div><h2>3D reservoir state</h2><p>Rotate, zoom and inspect the current final-time saturation/connectivity state.</p></div>
-          <select id="viewMode"><option value="saturation">Water saturation</option><option value="permeability">Permeability</option><option value="cluster">Percolating cluster</option><option value="treatment">Treatment placement</option></select>
+        <div class="section-head"><div><h2>3D simulation results workspace</h2><p>Inspect calculated reservoir properties and well trajectories from the current numerical state.</p></div>
+          <select id="viewMode"><option value="saturation">Water saturation, Sw</option><option value="pressure">Dimensionless pressure, P*</option><option value="permeability">Permeability, log k</option><option value="cluster">Percolating cluster</option><option value="treatment">Treatment placement</option></select>
         </div><div id="reservoir3d" class="plot tall"></div>
       </section>
-      <section class="panel"><div class="section-head"><div><h2>Production response</h2><p>Relative rate index, fractional-flow water cut and recovery respond to the same pressure/saturation state shown in 3D.</p></div></div><div id="productionPlot" class="plot"></div></section>
+      <section class="panel"><div class="section-head"><div><h2>Production response</h2><p>Relative rate, fractional-flow water cut, recovery and injected pore volume from the same FV simulation.</p></div></div><div id="productionPlot" class="plot"></div></section>
       <section class="panel insights"><h2>Cause-and-effect diagnostics</h2><div id="diagnostics"></div></section>
     </section>
   </main>
