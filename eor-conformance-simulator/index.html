@@ -21,19 +21,10 @@
     <aside class="panel controls">
       <h2>Model controls</h2>
       <label>EOR process
-        <select id="eorType">
-          <option value="water">Waterflood</option>
-          <option value="polymer" selected>Polymer flood</option>
-          <option value="co2">CO₂ flood</option>
-          <option value="foam">Foam-assisted gas flood</option>
-        </select>
+        <select id="eorType"><option value="water">Waterflood</option><option value="polymer" selected>Polymer flood</option><option value="co2">CO₂ flood</option><option value="foam">Foam-assisted gas flood</option></select>
       </label>
       <label>Conformance treatment
-        <select id="treatmentType">
-          <option value="none">None</option>
-          <option value="gel" selected>Gel treatment</option>
-          <option value="foam">Foam treatment</option>
-        </select>
+        <select id="treatmentType"><option value="none">None</option><option value="gel" selected>Gel treatment</option><option value="foam">Foam treatment</option></select>
       </label>
       <div class="grid2">
         <label>Nx <input id="nx" type="number" min="10" max="30" value="20" /></label>
@@ -69,14 +60,22 @@
         <article><span>FV water-balance residual</span><strong id="mbKpi">—</strong><small>% total PV</small></article>
       </div>
       <section class="panel visual-card">
-        <div class="section-head"><div><h2>3D simulation results workspace</h2><p>Inspect calculated reservoir properties and well trajectories from the current numerical state.</p></div>
+        <div class="section-head">
+          <div><h2>3D simulation results workspace</h2><p>Interrogate calculated states through time and by K layer; all views come from the same FV realization.</p></div>
           <select id="viewMode"><option value="saturation">Water saturation, Sw</option><option value="pressure">Dimensionless pressure, P*</option><option value="permeability">Permeability, log k</option><option value="cluster">Percolating cluster</option><option value="treatment">Treatment placement</option></select>
-        </div><div id="reservoir3d" class="plot tall"></div>
+        </div>
+        <div class="viewer-toolbar">
+          <button id="playBtn">▶ Play</button>
+          <label>Time <strong id="timeStepLabel">—</strong><input id="timeStep" type="range" min="0" max="90" step="1" value="90" /></label>
+          <label>View <select id="layerMode"><option value="all">All layers</option><option value="slice">Single K layer</option></select></label>
+          <label>Layer <strong id="layerLabel">All layers</strong><input id="layerSlice" type="range" min="0" max="7" step="1" value="3" disabled /></label>
+        </div>
+        <div id="reservoir3d" class="plot tall"></div>
       </section>
-      <section class="panel"><div class="section-head"><div><h2>Production response</h2><p>Relative rate, fractional-flow water cut, recovery and injected pore volume from the same FV simulation.</p></div></div><div id="productionPlot" class="plot"></div></section>
+      <section class="panel"><div class="section-head"><div><h2>Production response</h2><p>Relative rate, fractional-flow water cut, recovery and injected pore volume from the same FV simulation. The vertical cursor follows the selected 3D timestep.</p></div></div><div id="productionPlot" class="plot"></div></section>
       <section class="panel insights"><h2>Cause-and-effect diagnostics</h2><div id="diagnostics"></div></section>
     </section>
   </main>
-  <script type="module" src="./src/app-fv.js"></script>
+  <script type="module" src="./src/app-fv-v2.js"></script>
 </body>
 </html>
