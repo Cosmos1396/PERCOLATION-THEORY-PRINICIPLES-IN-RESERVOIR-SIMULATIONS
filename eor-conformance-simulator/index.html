@@ -59,6 +59,15 @@
         <article><span>Spanning cluster</span><strong id="spanKpi">—</strong></article>
         <article><span>FV water-balance residual</span><strong id="mbKpi">—</strong><small>% total PV</small></article>
       </div>
+      <section class="panel">
+        <div class="section-head"><div><h2>Decision-readiness guardrail</h2><p>Separates numerical validity from whether the simulated response is mature enough to support a conformance comparison.</p></div></div>
+        <div class="kpis">
+          <article><span>Flood maturity</span><strong id="readinessMaturity">Run required</strong></article>
+          <article><span>Water-balance check</span><strong id="readinessBalance">—</strong></article>
+          <article><span>Permitted interpretation</span><strong id="readinessUse">Research screening</strong></article>
+        </div>
+        <p id="readinessNote" class="note">Run the simulator before interpreting treatment performance.</p>
+      </section>
       <section class="panel visual-card">
         <div class="section-head">
           <div><h2>3D simulation results workspace</h2><p>Interrogate calculated states through time and by K layer; all views come from the same FV realization.</p></div>
@@ -77,5 +86,6 @@
     </section>
   </main>
   <script type="module" src="./src/app-fv-v2.js"></script>
+  <script type="module" src="./src/decision-readiness.js"></script>
 </body>
 </html>
