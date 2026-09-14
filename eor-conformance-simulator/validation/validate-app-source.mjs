@@ -5,11 +5,14 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const appPath = path.resolve(here, '../src/app-fv-v2.js');
+const guardrailPath = path.resolve(here, '../src/decision-readiness.js');
 const indexPath = path.resolve(here, '../index.html');
 const source = fs.readFileSync(appPath, 'utf8');
+const guardrail = fs.readFileSync(guardrailPath, 'utf8');
 const html = fs.readFileSync(indexPath, 'utf8');
 
 execFileSync(process.execPath, ['--check', appPath], { stdio: 'inherit' });
+execFileSync(process.execPath, ['--check', guardrailPath], { stdio: 'inherit' });
 
 const checks = [
   ['active page loads the validated FV application', html.includes('./src/app-fv-v2.js')],
@@ -22,7 +25,11 @@ const checks = [
   ['K-layer slicing is implemented', source.includes('function selectedLayer()') && source.includes("$('layerMode').value==='slice'")],
   ['production chart follows the selected timestep', source.includes('shapes:cursor>0?')],
   ['viewer controls are present in HTML', html.includes('id="timeStep"') && html.includes('id="layerSlice"') && html.includes('id="playBtn"')],
-  ['research-model interpretation boundary remains visible', html.includes('should not be treated as field forecasts')]
+  ['research-model interpretation boundary remains visible', html.includes('should not be treated as field forecasts')],
+  ['decision-readiness module is loaded', html.includes('./src/decision-readiness.js')],
+  ['pre-breakthrough runs are explicitly blocked from conformance claims', guardrail.includes('Do not claim conformance benefit from this run') && guardrail.includes('producer breakthrough was not reached')],
+  ['guardrail preserves reduced-order interpretation class', guardrail.includes('Reduced-order research only')],
+  ['guardrail reports the numerical water-balance check separately', html.includes('id="readinessBalance"') && guardrail.includes("$('mbKpi')")]
 ];
 
 let failed = 0;
