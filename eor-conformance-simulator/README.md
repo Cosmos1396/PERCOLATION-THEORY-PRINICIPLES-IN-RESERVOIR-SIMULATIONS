@@ -1,0 +1,123 @@
+# EOR Conformance Control Simulator
+
+Interactive 3D reduced-order reservoir simulator that combines **percolation theory**, **cellular automata (CA)** and a **pressure-driven transmissibility model** to study EOR conformance-control concepts.
+
+## Current-build results
+
+The figures below are generated from the current simulator physics using the deterministic default realization (`seed = 137`). The untreated and gel-treatment cases use the **same geology** so that the comparison isolates treatment response rather than geology randomness.
+
+### 3D permeability / connectivity
+
+![3D permeability architecture and connectivity](media/current-build/permeability_connectivity_3d.svg)
+
+### 3D saturation / treatment placement
+
+![3D saturation front and treatment targets](media/current-build/saturation_treatment_3d.svg)
+
+### Production-response comparison
+
+![Current-build performance comparison](media/current-build/performance_comparison.svg)
+
+| Metric | Polymer - untreated | Polymer + gel |
+|---|---:|---:|
+| Breakthrough step | 74 | 78 |
+| Final water cut | 40.73% | 31.56% |
+| Recovery factor | 44.76% | 44.49% |
+| Swept fraction | 88.91% | 89.41% |
+| Gel-treated cells | 0 | 347 |
+| Connected high-k fraction | 37.88% | 37.88% |
+
+The present result suggests that pressure redistribution after selective permeability reduction can delay breakthrough and lower water cut in this realization, but it does **not** yet demonstrate incremental recovery. That distinction is important: this is a reduced-order research result, not a field forecast.
+
+Raw summary values are available in [`media/current-build/case_metrics.csv`](media/current-build/case_metrics.csv).
+
+## Current physics
+
+- Generates a correlated 3D heterogeneous permeability field.
+- Uses 6-neighbour connectivity to identify injector-to-producer high-permeability spanning clusters.
+- Solves a dimensionless steady pressure field between injector and producer faces with iterative transmissibility weighting.
+- Uses harmonic permeability and phase mobility to calculate Darcy-like positive cell-to-cell flux weights.
+- Advances water saturation stochastically with a CA rule weighted by local pressure drop and transmissibility.
+- Enforces irreducible water saturation `Swi` and residual oil saturation `Sor`.
+- Uses Corey relative-permeability curves:
+  - `krw = Se^nw`
+  - `kro = (1-Se)^no`
+  - `Se = (Sw-Swi)/(1-Swi-Sor)`
+- Calculates producer water cut from phase fractional flow rather than directly from saturation.
+- Applies selective gel/foam treatment to swept, connected high-permeability cells.
+- Re-solves pressure after treatment so permeability reduction can redistribute subsequent flow.
+- Uses explicit uniform porosity to calculate normalized cell pore volume and pore-volume-weighted water storage.
+- Reports a cumulative **CA source defect** as a fraction of total pore volume. This is the saturation-storage increase not explained by inlet-cell replenishment, and therefore quantifies the present CA formulation's non-conservation.
+- Reports relative oil-rate index, water cut, recovery factor, sweep and breakthrough.
+
+## EOR modes
+
+- Waterflood
+- Polymer flood
+- CO2 flood
+- Foam-assisted gas flood
+
+The EOR selections currently modify reduced-order mobility/spread factors. They are not yet mechanistic polymer, foam or compositional modules.
+
+## Main controls
+
+| Control | Physical interpretation |
+|---|---|
+| High-permeability fraction | Amount of conductive rock / percolation occupancy |
+| Permeability contrast | Severity of preferential flow paths |
+| Spatial correlation | Continuity of connected high-permeability regions |
+| Porosity | Uniform normalized cell pore volume used for storage/conservation diagnostics |
+| Mobility ratio | Relative displacement stability |
+| CA propagation probability | Stochastic transport scaling |
+| Swi | Irreducible water saturation |
+| Sor | Residual oil saturation |
+| Corey `nw` | Water relative-permeability curvature |
+| Corey `no` | Oil relative-permeability curvature |
+| Treatment strength | Permeability reduction in targeted cells |
+| Treatment start step | Timing of conformance intervention |
+| Channel targeting percentile | Selectivity of treatment placement |
+
+## Pressure / transport concept
+
+For each connection, phase mobility is calculated from the current saturation and Corey curves. Effective total mobility is combined with permeability, and a harmonic connection transmissibility is formed. The pressure field is solved iteratively with fixed dimensionless pressure at the injector and producer faces and no-flow behavior on the remaining outer boundaries.
+
+The CA transition probability is then weighted by positive local pressure-driven flux. This makes conformance treatment more physically meaningful than simply changing a CA probability: reducing permeability in a treated high-flow path changes the pressure solution and therefore the relative attractiveness of alternative pathways.
+
+### Pore-volume / conservation audit
+
+Each cell currently has normalized bulk volume of 1 and user-controlled uniform porosity `φ`, so cell pore volume is `PV = φ`. Water storage is evaluated as `Σ(Sw × PV)`.
+
+At every CA step the simulator compares the change in pore-volume-weighted water storage with the water explicitly added when inlet cells are restored to injection saturation. The difference is accumulated and displayed as **CA source defect (% total PV)**. A non-zero value is expected because the present stochastic CA propagation raises destination saturation without subtracting an equal water volume from an upstream control volume.
+
+This diagnostic is deliberately exposed rather than hidden. It is **not** a field material-balance calculation and should not be interpreted as injected or produced reservoir barrels. Its purpose is to quantify the reduced-order transport limitation and define a measurable acceptance criterion for the future conservative finite-volume transport module.
+
+## Reproducibility and validation
+
+The default realization uses a deterministic seeded pseudo-random generator. `Reset defaults` restores that seed. `New geology` intentionally changes the seed to generate a different realization.
+
+Engineering regression checks are stored in `validation/`. GitHub Actions now runs the benchmark and application-source checks automatically for simulator changes and pull requests.
+
+## Run locally
+
+```bash
+cd eor-conformance-simulator
+python -m http.server 8000
+```
+
+Then open `http://localhost:8000`.
+
+No build step is required. Plotly is loaded from a CDN.
+
+## Interpretation boundary
+
+This remains a **reduced-order research simulator**. Pressure and fractional-flow physics improve causal behavior, but it is not a replacement for a fully implicit finite-volume black-oil/compositional/thermal simulator. The current rate axis is a **relative rate index**, not STB/day. The newly exposed CA source defect means the current saturation evolution is explicitly **not material-balance closed**. Results should not be presented as field forecasts unless the transport formulation is conservative and the model is calibrated to reservoir geometry, porosity/permeability, PVT/SCAL, well controls and production history.
+
+## Development priorities
+
+1. Replace non-conservative CA saturation propagation with a conservative finite-volume transport update while retaining percolation analysis as a connectivity diagnostic.
+2. Add side-by-side baseline vs treatment scenarios on the same geology.
+3. Add heterogeneous porosity and absolute grid-cell dimensions / pore volume.
+4. Import permeability/porosity grids (CSV/GRDECL-style workflow).
+5. Add multiple injector/producer patterns and well controls.
+6. Implement mechanistic polymer rheology/adsorption and foam mobility reduction.
+7. Add ensembles, uncertainty distributions and treatment optimization.

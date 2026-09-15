@@ -1,0 +1,20 @@
+{
+  "name": "default-seed-137-polymer-gel-benchmark",
+  "model_class": "reduced-order research simulator",
+  "seed": 137,
+  "purpose": "Regression benchmark for the published untreated versus gel-treatment comparison on identical geology.",
+  "source_metrics": "../media/current-build/case_metrics.csv",
+  "acceptance": {
+    "same_connected_high_k_fraction": true,
+    "untreated_treated_cells": 0,
+    "treated_treated_cells_min": 1,
+    "treated_breakthrough_not_earlier": true,
+    "treated_final_water_cut_not_higher": true,
+    "recovery_factor_absolute_change_max_pct_points": 2.0
+  },
+  "notes": [
+    "This benchmark is a reproducibility/regression check, not a field-history match.",
+    "Passing the benchmark does not establish material-balance conservation or predictive validity.",
+    "Any intentional physics change that moves these results should update both the published metrics and this benchmark after engineering review."
+  ]
+}
