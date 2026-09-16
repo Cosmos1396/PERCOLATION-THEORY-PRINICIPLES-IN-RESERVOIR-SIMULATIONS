@@ -29,5 +29,7 @@ jobs:
         run: node validation/validate-transport.mjs
       - name: Validate pore-volume run control
         run: node validation/validate-run-control.mjs
+      - name: Validate adaptive flood-horizon runner
+        run: node validation/validate-adaptive-runner.mjs
       - name: Validate application source and conservation diagnostics
         run: node validation/validate-app-source.mjs
