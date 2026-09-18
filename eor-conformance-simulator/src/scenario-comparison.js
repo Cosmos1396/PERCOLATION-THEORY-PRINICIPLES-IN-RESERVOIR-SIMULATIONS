@@ -1,65 +1,96 @@
 const finite = v => Number.isFinite(v);
 
-function last(history) {
-  if (!Array.isArray(history) || history.length === 0) throw new Error('scenario history must be non-empty');
-  return history[history.length - 1];
+function validateHistory(history, label) {
+  if (!Array.isArray(history) || history.length === 0) throw new Error(`${label} history must be non-empty`);
+  let previous = -Infinity;
+  for (const row of history) {
+    if (!finite(row.injectedPvi)) throw new Error(`${label} history requires finite injectedPvi`);
+    if (row.injectedPvi + 1e-12 < previous) throw new Error(`${label} injectedPvi must be non-decreasing`);
+    previous = row.injectedPvi;
+  }
 }
 
-function trapz(history, key) {
-  if (history.length < 2) return 0;
+function valueAtPvi(history, key, target) {
+  if (target <= history[0].injectedPvi) return history[0][key] ?? 0;
+  for (let i = 1; i < history.length; i++) {
+    const a = history[i - 1], b = history[i];
+    if (target <= b.injectedPvi + 1e-12) {
+      const dx = b.injectedPvi - a.injectedPvi;
+      if (dx <= 1e-12) return b[key] ?? a[key] ?? 0;
+      const f = (target - a.injectedPvi) / dx;
+      return (a[key] ?? 0) + f * ((b[key] ?? 0) - (a[key] ?? 0));
+    }
+  }
+  return history[history.length - 1][key] ?? 0;
+}
+
+function integrateToPvi(history, key, target) {
   let total = 0;
   for (let i = 1; i < history.length; i++) {
     const a = history[i - 1], b = history[i];
-    const xa = finite(a.injectedPvi) ? a.injectedPvi : i - 1;
-    const xb = finite(b.injectedPvi) ? b.injectedPvi : i;
-    const ya = finite(a[key]) ? a[key] : 0;
-    const yb = finite(b[key]) ? b[key] : 0;
-    total += 0.5 * (ya + yb) * Math.max(0, xb - xa);
+    if (a.injectedPvi >= target) break;
+    const right = Math.min(b.injectedPvi, target);
+    const dx = right - a.injectedPvi;
+    if (dx > 0) {
+      const ya = finite(a[key]) ? a[key] : 0;
+      const yb = valueAtPvi(history, key, right);
+      total += 0.5 * (ya + yb) * dx;
+    }
+    if (b.injectedPvi >= target) break;
   }
   return total;
 }
 
+function breakthroughPvi(scenario, threshold) {
+  const h = scenario.history;
+  const index = Number.isInteger(scenario.breakthroughStep) && scenario.breakthroughStep >= 0
+    ? Math.min(scenario.breakthroughStep, h.length - 1)
+    : h.findIndex(r => (r.wc ?? r.waterCut ?? 0) >= threshold);
+  return index >= 0 ? h[index].injectedPvi : null;
+}
+
 /**
- * Compare untreated and conformance cases only when they share the same geology id.
- * Metrics are reduced-order, dimensionless decision-support outputs; they are not field forecasts.
+ * Compare scenarios on identical geology and at the same injected pore-volume horizon.
+ * This avoids creating apparent incremental oil or water-cut benefit merely because one
+ * case was simulated farther than the other. Outputs remain reduced-order screening metrics.
  */
 export function compareScenarios({ baseline, treated, waterCutThreshold = 0.10 }) {
   if (!baseline || !treated) throw new Error('baseline and treated scenarios are required');
-  if (!baseline.geologyId || baseline.geologyId !== treated.geologyId) {
-    throw new Error('same-geology comparison required');
-  }
+  if (!baseline.geologyId || baseline.geologyId !== treated.geologyId) throw new Error('same-geology comparison required');
+  validateHistory(baseline.history, 'baseline');
+  validateHistory(treated.history, 'treated');
+
   const bh = baseline.history, th = treated.history;
-  const bLast = last(bh), tLast = last(th);
-  const bBt = baseline.breakthroughStep ?? bh.findIndex(r => (r.wc ?? r.waterCut ?? 0) >= waterCutThreshold);
-  const tBt = treated.breakthroughStep ?? th.findIndex(r => (r.wc ?? r.waterCut ?? 0) >= waterCutThreshold);
-  const baselineBt = bBt >= 0 ? bBt : null;
-  const treatedBt = tBt >= 0 ? tBt : null;
-  const breakthroughDelaySteps = baselineBt !== null && treatedBt !== null ? treatedBt - baselineBt : null;
-  const finalWaterCutBaseline = bLast.wc ?? bLast.waterCut ?? 0;
-  const finalWaterCutTreated = tLast.wc ?? tLast.waterCut ?? 0;
-  const waterCutReductionPctPoints = 100 * (finalWaterCutBaseline - finalWaterCutTreated);
-  const finalRecoveryBaseline = bLast.rf ?? bLast.recoveryFactor ?? 0;
-  const finalRecoveryTreated = tLast.rf ?? tLast.recoveryFactor ?? 0;
-  const recoveryChangePctPoints = 100 * (finalRecoveryTreated - finalRecoveryBaseline);
-  const oilIndexBaseline = trapz(bh, 'qo');
-  const oilIndexTreated = trapz(th, 'qo');
-  const incrementalOilIndex = oilIndexTreated - oilIndexBaseline;
-  const mature = baselineBt !== null && treatedBt !== null;
+  const commonPvi = Math.min(bh[bh.length - 1].injectedPvi, th[th.length - 1].injectedPvi);
+  const bBtPvi = breakthroughPvi(baseline, waterCutThreshold);
+  const tBtPvi = breakthroughPvi(treated, waterCutThreshold);
+  const bothBreakthroughByCommonPvi = bBtPvi !== null && tBtPvi !== null && bBtPvi <= commonPvi && tBtPvi <= commonPvi;
+
+  const finalWaterCutBaseline = valueAtPvi(bh, 'wc', commonPvi);
+  const finalWaterCutTreated = valueAtPvi(th, 'wc', commonPvi);
+  const finalRecoveryBaseline = valueAtPvi(bh, 'rf', commonPvi);
+  const finalRecoveryTreated = valueAtPvi(th, 'rf', commonPvi);
+  const oilIndexBaseline = integrateToPvi(bh, 'qo', commonPvi);
+  const oilIndexTreated = integrateToPvi(th, 'qo', commonPvi);
+
   return {
     geologyId: baseline.geologyId,
-    matureComparison: mature,
-    breakthroughDelaySteps,
+    comparisonInjectedPvi: commonPvi,
+    matureComparison: bothBreakthroughByCommonPvi,
+    baselineBreakthroughPvi: bBtPvi,
+    treatedBreakthroughPvi: tBtPvi,
+    breakthroughDelayPvi: bBtPvi !== null && tBtPvi !== null ? tBtPvi - bBtPvi : null,
     finalWaterCutBaseline,
     finalWaterCutTreated,
-    waterCutReductionPctPoints,
+    waterCutReductionPctPoints: 100 * (finalWaterCutBaseline - finalWaterCutTreated),
     finalRecoveryBaseline,
     finalRecoveryTreated,
-    recoveryChangePctPoints,
+    recoveryChangePctPoints: 100 * (finalRecoveryTreated - finalRecoveryBaseline),
     oilIndexBaseline,
     oilIndexTreated,
-    incrementalOilIndex,
-    interpretation: mature
-      ? 'Reduced-order same-geology comparison; not a field-calibrated prediction.'
-      : 'Pre-breakthrough or incomplete comparison; do not claim conformance benefit.'
+    incrementalOilIndex: oilIndexTreated - oilIndexBaseline,
+    interpretation: bothBreakthroughByCommonPvi
+      ? `Reduced-order same-geology comparison at matched ${commonPvi.toFixed(3)} PVI; not a field-calibrated prediction.`
+      : `Matched-PVI comparison is pre-breakthrough or incomplete at ${commonPvi.toFixed(3)} PVI; do not claim conformance benefit.`
   };
 }
