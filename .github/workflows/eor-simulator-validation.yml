@@ -33,5 +33,7 @@ jobs:
         run: node validation/validate-adaptive-runner.mjs
       - name: Validate same-geology scenario comparison
         run: node validation/validate-scenario-comparison.mjs
+      - name: Validate model interpretation boundary
+        run: node validation/validate-model-card.mjs
       - name: Validate application source and conservation diagnostics
         run: node validation/validate-app-source.mjs
