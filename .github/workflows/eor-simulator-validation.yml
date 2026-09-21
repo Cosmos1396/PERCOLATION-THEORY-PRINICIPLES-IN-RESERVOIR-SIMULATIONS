@@ -29,6 +29,8 @@ jobs:
         run: node validation/validate-transport.mjs
       - name: Validate conservative production accounting
         run: node validation/validate-production-accounting.mjs
+      - name: Validate coupled FV and production accounting
+        run: node validation/validate-coupled-accounting.mjs
       - name: Validate pore-volume run control
         run: node validation/validate-run-control.mjs
       - name: Validate adaptive flood-horizon runner
