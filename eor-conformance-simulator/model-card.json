@@ -1,0 +1,38 @@
+{
+  "model_name": "EOR Conformance Control Simulator",
+  "model_class": "reduced-order research simulator",
+  "prediction_status": "not field calibrated",
+  "active_transport": "explicit conservative finite-volume water transport",
+  "connectivity_diagnostic": "6-neighbour percolation analysis",
+  "pressure_model": "dimensionless steady transmissibility-weighted pressure solve",
+  "reproducibility": {
+    "default_seed": 137,
+    "same_geology_required_for_scenario_comparison": true,
+    "scenario_comparison_basis": "matched cumulative injected pore volume"
+  },
+  "validated_claims": [
+    "finite-volume water accounting closes to numerical tolerance in regression tests",
+    "deterministic default geology is reproducible",
+    "scenario comparison rejects different geology identifiers",
+    "scenario comparison uses a common injected-PVI horizon"
+  ],
+  "not_validated_for": [
+    "field production forecasting",
+    "absolute STB/day or reservoir-barrel rates",
+    "history-matched reserves or economics",
+    "mechanistic polymer rheology or adsorption",
+    "mechanistic foam or gel chemistry",
+    "compositional CO2 displacement"
+  ],
+  "missing_field_physics": [
+    "absolute grid dimensions and dimensional transmissibility",
+    "heterogeneous porosity",
+    "PVT and formation-volume factors",
+    "gravity and capillary pressure",
+    "rate/BHP well controls and wellbore model",
+    "field SCAL calibration",
+    "production-history calibration"
+  ],
+  "decision_rule": "Do not claim conformance benefit before breakthrough and a matched-geology, matched-PVI baseline comparison.",
+  "schema_version": 1
+}
