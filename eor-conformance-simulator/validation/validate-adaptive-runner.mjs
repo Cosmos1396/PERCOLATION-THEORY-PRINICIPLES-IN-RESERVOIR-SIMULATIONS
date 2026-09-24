@@ -13,18 +13,38 @@ import { runToFloodHorizon } from '../src/adaptive-runner.js';
   assert.ok(r.injectedPvi >= 1.0);
 }
 
-// Breakthrough case: continue for the full post-breakthrough observation window.
+// Breakthrough case: continue for a physical injected-PVI observation window.
 {
   const r = runToFloodHorizon({
     targetInjectedPvi: 0.5,
-    postBreakthroughSteps: 4,
+    postBreakthroughPvi: 0.4,
     maxSteps: 30,
     advance: step => ({ injectedPvi: 0.1 * (step + 1), waterCut: step >= 3 ? 0.12 : 0.03 })
   });
   assert.equal(r.breakthroughStep, 3);
-  assert.equal(r.control.reason, 'target-pv-and-post-breakthrough-window');
-  assert.ok(r.history.at(-1).step - r.breakthroughStep >= 4);
+  assert.ok(Math.abs(r.breakthroughInjectedPvi - 0.4) < 1e-12);
+  assert.equal(r.control.reason, 'target-pv-and-post-breakthrough-pvi-window');
+  assert.ok(r.injectedPvi - r.breakthroughInjectedPvi >= 0.4 - 1e-12);
   assert.equal(r.maturity, 'post-breakthrough');
+}
+
+// Numerical timestep density must not change the physical stopping horizon.
+{
+  const coarse = runToFloodHorizon({
+    targetInjectedPvi: 0.4,
+    postBreakthroughPvi: 0.2,
+    maxSteps: 30,
+    advance: step => ({ injectedPvi: 0.1 * (step + 1), waterCut: step >= 2 ? 0.15 : 0.02 })
+  });
+  const fine = runToFloodHorizon({
+    targetInjectedPvi: 0.4,
+    postBreakthroughPvi: 0.2,
+    maxSteps: 60,
+    advance: step => ({ injectedPvi: 0.05 * (step + 1), waterCut: step >= 5 ? 0.15 : 0.02 })
+  });
+  assert.ok(coarse.control.postBreakthroughInjectedPvi >= 0.2 - 1e-12);
+  assert.ok(fine.control.postBreakthroughInjectedPvi >= 0.2 - 1e-12);
+  assert.ok(Math.abs(coarse.injectedPvi - fine.injectedPvi) <= 0.05 + 1e-12);
 }
 
 // Safety guard: a stalled/slow flood must terminate deterministically.
